@@ -1,89 +1,88 @@
 # Smart Procurement
 
-Интеллектуальный слой поддержки и автоматизации закупочных решений предприятия.
-Система подключается к корпоративным источникам данных, строит единую картину закупочной
-ситуации, обнаруживает и объясняет риски (дефицит, срыв сроков, аномалии цен и качества),
-формирует закупочные рекомендации и — в зависимости от уровня полномочий по модели **LORM** —
-показывает решение человеку, запрашивает подтверждение или выполняет действие автономно в
-рамках утверждённой policy.
+An intelligent decision layer for enterprise procurement. The system connects to corporate
+data sources, builds a single picture of the procurement situation, detects and explains risks
+(shortages, missed lead times, price and quality anomalies), produces buying recommendations,
+and — depending on the authority level under the **LORM** model — shows the decision to a
+human, asks for confirmation, or executes the action autonomously within an approved policy.
 
-Smart Procurement **не заменяет** ERP/WMS/MES. Это слой принятия решений над существующими
-системами; исполнение и учёт остаются за ними.
+Smart Procurement **does not replace** ERP/WMS/MES. It is a decision layer on top of existing
+systems; execution and bookkeeping stay with them.
 
-## Архитектура
+## Architecture
 
-Три отдельных Git-репозитория:
+Three separate Git repositories:
 
-| Репозиторий | Содержимое |
-|-------------|------------|
-| **SmartProcurement** (этот) | Конституция, спецификации, планы, контракты, архитектурная документация. Кода приложения не содержит. |
-| **SmartProcurement-Backend** | Python · FastAPI · PostgreSQL. REST API, доменная логика, AI Decision Layer, LORM enforcement, policies, execution adapters, audit, фоновая обработка. Модульный монолит + worker-процесс. |
-| **SmartProcurement-Frontend** | React · TypeScript · Vite. Веб-интерфейс для ролей Administrator, Buyer, Approver. |
+| Repository | Contents |
+|------------|----------|
+| **SmartProcurement** (this one) | Constitution, specifications, plans, contracts, architecture docs. No application code. |
+| **SmartProcurement-Backend** | Python · FastAPI · PostgreSQL. REST API, domain logic, AI Decision Layer, LORM enforcement, policies, execution adapters, audit, background processing. Modular monolith + worker process. |
+| **SmartProcurement-Frontend** | React · TypeScript · Vite. Web UI for the Administrator, Buyer, and Approver roles. |
 
-Backend и Frontend взаимодействуют только через REST/OpenAPI-контракт. Каталоги `backend/` и
-`frontend/` внутри этого репозитория — самостоятельные репозитории и намеренно исключены из
-отслеживания через `.gitignore` (без submodules).
+Backend and Frontend communicate only through a REST/OpenAPI contract. The `backend/` and
+`frontend/` directories inside this repository are standalone repositories and are
+deliberately git-ignored here (no submodules).
 
-Слои: Frontend → Backend/API → AI Decision Layer → **LORM Responsibility/Enforcement** →
-Data/Integration → Execution → Persistence. Backend — единственная граница безопасности.
+Layers: Frontend → Backend/API → AI Decision Layer → **LORM Responsibility/Enforcement** →
+Data/Integration → Execution → Persistence. The backend is the only security boundary.
 
-- Frontend: `<url SmartProcurement-Frontend>`
-- Backend: `<url SmartProcurement-Backend>`
+- Frontend: `<SmartProcurement-Frontend url>`
+- Backend: `<SmartProcurement-Backend url>`
 
-## Роль LORM
+## Role of LORM
 
-[Layered Operational Responsibility Model](https://github.com/Argyronix/lorm) задаёт **уровень
-полномочий (L0–L5) для каждой capability отдельно**, а не для системы в целом:
+The [Layered Operational Responsibility Model](https://github.com/Argyronix/lorm) assigns an
+**authority level (L0–L5) to each capability individually**, not to the system as a whole:
 
-- **L0–L2** — знание предметной области, наблюдение, диагностика с оценкой уверенности.
-- **L3** — рекомендация; решение принимает человек.
-- **L4** — действие готовится и выполняется только после подтверждения человеком.
-- **L5** — автономное выполнение в границах машиночитаемой policy с отдельными автором и
-  утверждающим.
+- **L0–L2** — domain awareness, observation, diagnosis with a confidence estimate.
+- **L3** — recommendation; the human decides.
+- **L4** — an action is prepared and executed only after per-action human approval.
+- **L5** — autonomous execution within the bounds of a machine-readable policy that has a
+  distinct author and approver.
 
-LORM отвечает за полномочия, а не за само закупочное решение. Повышение уровня — только
-решением человека и на один шаг; понижение — автоматически при нарушении policy, сбое
-verification, потере наблюдаемости или истечении policy. Официальные схема policy и валидатор
-переиспользуются как есть; enforcement адаптирован под backend-рантайм — см.
+LORM governs authority, not the procurement decision itself. Level promotion is human-only and
+one step at a time; demotion is automatic on policy violation, verification failure, loss of
+observability, or policy expiry. The official policy schema and validator are reused as-is;
+enforcement is adapted to the backend runtime — see
 [`contracts/lorm-enforcement.md`](specs/001-smart-procurement/contracts/lorm-enforcement.md)
-и [`research.md` §6](specs/001-smart-procurement/research.md).
+and [`research.md` §6](specs/001-smart-procurement/research.md).
 
-## Документы
+## Documents
 
-| Документ | Назначение |
-|----------|------------|
-| [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Конституция проекта (v1.0.0) — принципы ответственности, безопасности, аудита, LORM |
-| [`specs/001-smart-procurement/spec.md`](specs/001-smart-procurement/spec.md) | Функциональная спецификация v1 + Clarifications |
-| [`specs/001-smart-procurement/plan.md`](specs/001-smart-procurement/plan.md) | Технический план, Constitution Check, структура проекта |
-| [`specs/001-smart-procurement/research.md`](specs/001-smart-procurement/research.md) | Технические решения и обоснования |
-| [`specs/001-smart-procurement/data-model.md`](specs/001-smart-procurement/data-model.md) | Модель данных, машины состояний |
-| [`specs/001-smart-procurement/contracts/`](specs/001-smart-procurement/contracts/) | Контракты: REST API, AI-выход, execution adapter, source connector, LORM enforcement |
-| [`specs/001-smart-procurement/quickstart.md`](specs/001-smart-procurement/quickstart.md) | Сквозной сценарий проверки |
-| [`CLAUDE.md`](CLAUDE.md) | Ориентир для работы в репозитории |
+| Document | Purpose |
+|----------|---------|
+| [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Project constitution (v1.0.0) — principles of responsibility, security, audit, LORM |
+| [`specs/001-smart-procurement/spec.md`](specs/001-smart-procurement/spec.md) | Functional specification for v1 + Clarifications |
+| [`specs/001-smart-procurement/plan.md`](specs/001-smart-procurement/plan.md) | Technical plan, Constitution Check, project structure |
+| [`specs/001-smart-procurement/research.md`](specs/001-smart-procurement/research.md) | Technical decisions and rationale |
+| [`specs/001-smart-procurement/data-model.md`](specs/001-smart-procurement/data-model.md) | Data model and state machines |
+| [`specs/001-smart-procurement/contracts/`](specs/001-smart-procurement/contracts/) | Contracts: REST API, AI output, execution adapter, source connector, LORM enforcement |
+| [`specs/001-smart-procurement/quickstart.md`](specs/001-smart-procurement/quickstart.md) | End-to-end validation walkthrough |
+| [`CLAUDE.md`](CLAUDE.md) | Orientation guide for working in this repository |
 
-## Разработка (Spec-Driven)
+## Development (Spec-Driven)
 
-Работа ведётся через Spec Kit из корня репозитория:
+Work is done through Spec Kit from the repository root:
 
 ```
-/speckit-constitution   → конституция              (готово)
-/speckit-specify        → спецификация фичи         (готово)
-/speckit-clarify        → уточнения в спецификации  (готово)
-/speckit-plan           → план + контракты          (готово)
-/speckit-tasks          → tasks.md                  ← следующий шаг
-/speckit-implement      → реализация по tasks.md
+/speckit-constitution   → constitution               (done)
+/speckit-specify        → feature specification       (done)
+/speckit-clarify        → clarifications in the spec  (done)
+/speckit-plan           → plan + contracts            (done)
+/speckit-tasks          → tasks.md                    ← next step
+/speckit-implement      → implementation from tasks.md
 ```
 
-## Локальный запуск
+## Running locally
 
-Появится после реализации backend и frontend. Ориентировочно (см.
+Available once the backend and frontend are implemented. Outline (see
 [`quickstart.md`](specs/001-smart-procurement/quickstart.md)):
 
 ```sh
 # backend/  (Python 3.12, PostgreSQL 16)
 alembic upgrade head && python -m app.seed --demo
 uvicorn app.main:app --reload      # API + OpenAPI
-python -m app.worker               # планировщик и очередь фоновых задач
+python -m app.worker               # scheduler and background job queue
 
 # frontend/ (Node 20)
 npm install && npm run dev
