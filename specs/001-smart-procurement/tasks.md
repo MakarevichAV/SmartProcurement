@@ -104,7 +104,7 @@ before AI workflows and UI.
 
 ### Seed + frontend shell
 
-- [ ] T036 Demo seed CLI `backend/src/app/seed.py` (`python -m app.seed --demo`): one `enterprise`, roles + permission catalogue mapping, users `admin`/`buyer`/`approver`, capability seed (T021)
+- [ ] T036 Demo seed CLI `backend/src/app/seed.py` (`python -m app.seed --demo`): one `enterprise`; the full permission catalogue (`datasource.manage`, `mapping.confirm`, `domain.read`, `recommendation.request`, `approval.act`, `policy.author`, `policy.approve`, `capability.read`, `capability.promote`, `audit.read`, `user.manage` — data-model.md §1) mapped to roles; users `admin`/`buyer`/`approver`; capability seed (T021)
 - [ ] T037 [P] Frontend auth + shell: `frontend/src/features/auth/` (login page, token storage, refresh), `frontend/src/components/AppLayout.tsx` with nav for Dashboard, Risks/Recommendations, Approvals, Autopilot/Policies, Capabilities, Data Sources, Executions/Orders, Audit, Users & Roles; protected-route wrapper; `frontend/src/api/authApi.ts`
 - [ ] T038 [P] Frontend error surface `frontend/src/lib/errorToast.ts` + RTK Query error middleware rendering the unified error model
 
@@ -422,7 +422,7 @@ the backend (SC-013).
 - [ ] T157 [P] Extensibility test `backend/tests/integration/test_extensibility.py`: add a trivial new capability row and a new `file` source without touching core modules (SC-015)
 - [ ] T158 [P] Load test `load/observation.js` (k6) or `load/locustfile.py`: ~100k `observation_signal`/day, 10k SKUs, 10 sources against simulated adapter + mock provider; assert no growing `job` backlog and risks surface within one observation interval (SC-016)
 - [ ] T159 [P] `docs/architecture.md` — layer/module map, boundary rules, worker process
-- [ ] T160 [P] `docs/lorm-integration.md` — reuse / adapt / build split (from research.md §6 + contracts/lorm-enforcement.md), pinned upstream LORM commit/tag, demotion vs promotion semantics
+- [ ] T160 [P] `docs/lorm-integration.md` — reuse / adapt / build split (from research.md §6 + contracts/lorm-enforcement.md), pinned upstream LORM commit/tag, demotion vs promotion semantics. **Document the v1/demo simplification**: L4→L5 promotion enforces human-only + one-level + `l5_allowed`, but does **not** gate on the SPEC §6.2 RECOMMENDED ≥10-execution L4 track record (RECOMMENDED, not MUST). US6 surfaces the trust record for the approver; a hard threshold is deliberately not added in v1.
 - [ ] T161 [P] `docs/api-integration.md` — OpenAPI usage, unified error model, connector/adapter contracts
 - [ ] T162 [P] `docs/development-setup.md` + `docs/repository-map.md` — three-repo layout, local run, env vars, seed
 - [ ] T163 [P] `docs/adr/` — ADRs for: Postgres-backed job queue vs broker; in-process LORM enforcement adapter; JWT+RBAC; modular monolith; minimal promotion in Foundational

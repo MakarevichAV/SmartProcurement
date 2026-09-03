@@ -31,8 +31,11 @@ Global config boundary. `name`, `base_currency` (ISO 4217), `settings jsonb`,
 Buyer" in product terminology. `approver` corresponds to "Manager / Authorized Approver".
 
 ### `permission`
-Global catalogue: `key` (e.g. `datasource.manage`, `mapping.confirm`, `approval.act`,
-`policy.author`, `policy.approve`, `capability.promote`, `audit.read`, `user.manage`), `desc`.
+Global catalogue: `key` (`datasource.manage`, `mapping.confirm`, `domain.read`,
+`recommendation.request`, `approval.act`, `policy.author`, `policy.approve`,
+`capability.read`, `capability.promote`, `audit.read`, `user.manage`), `desc`.
+This is the full v1 catalogue; the demo seed (tasks.md T036) creates every key and maps it to
+roles.
 
 ### `role_permission` (M:N) — `role_id`, `permission_id`.
 
@@ -229,6 +232,9 @@ explicitly.
 `status` (`pending`|`approved`|`rejected`), `decided_by`, `decided_at`.
 Approval applies the change (one level). For `L4→L5`, `decided_by` MUST differ from the
 capability's active policy author (SPEC §6.2). AI `origin` never auto-applies (I-8, FR-052).
+The SPEC §6.2 L4 track record (RECOMMENDED ≥10 executions) is **surfaced** in `evidence` for
+the approver but is **not a hard gate in v1** — a deliberate demo simplification, documented in
+`docs/lorm-integration.md` (tasks.md T160).
 
 ### `policy`  (canonical L5 policy; serializes to a doc validating against
 `vendor/lorm/lorm-policy.schema.json`)
