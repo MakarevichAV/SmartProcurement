@@ -29,6 +29,10 @@ Data/Integration → Execution → Persistence. The backend is the only security
 - Frontend: `<SmartProcurement-Frontend url>`
 - Backend: `<SmartProcurement-Backend url>`
 
+**Status**: Phase 1 (scaffolding) is implemented and runnable — FastAPI skeleton with
+`/health` + OpenAPI, and a Vite/React shell. Phases 2+ (identity/auth, LORM, domain, …) are
+in `specs/001-smart-procurement/tasks.md`.
+
 ## Role of LORM
 
 The [Layered Operational Responsibility Model](https://github.com/Argyronix/lorm) assigns an
@@ -59,6 +63,7 @@ and [`research.md` §6](specs/001-smart-procurement/research.md).
 | [`specs/001-smart-procurement/contracts/`](specs/001-smart-procurement/contracts/) | Contracts: REST API, AI output, execution adapter, source connector, LORM enforcement |
 | [`specs/001-smart-procurement/tasks.md`](specs/001-smart-procurement/tasks.md) | 167 dependency-ordered implementation tasks, grouped by user story |
 | [`specs/001-smart-procurement/quickstart.md`](specs/001-smart-procurement/quickstart.md) | End-to-end validation walkthrough |
+| [`docs/development-setup.md`](docs/development-setup.md) | Local setup: three repos, ports, run commands |
 | [`CLAUDE.md`](CLAUDE.md) | Orientation guide for working in this repository |
 
 ## Development (Spec-Driven)
@@ -72,20 +77,30 @@ Work is done through Spec Kit from the repository root:
 /speckit-plan           → plan + contracts            (done)
 /speckit-tasks          → tasks.md                    (done)
 /speckit-analyze        → cross-artifact consistency  (done — clean)
-/speckit-implement      → implementation from tasks.md  ← next step
+/speckit-implement      → implementation from tasks.md  (in progress — Phase 1 / T001–T010 done)
 ```
 
 ## Running locally
 
-Available once the backend and frontend are implemented. Outline (see
-[`quickstart.md`](specs/001-smart-procurement/quickstart.md)):
+Full instructions and ports are in [`docs/development-setup.md`](docs/development-setup.md).
+
+**Phase 1 scaffold** (no database needed yet):
 
 ```sh
-# backend/  (Python 3.12, PostgreSQL 16)
-alembic upgrade head && python -m app.seed --demo
-uvicorn app.main:app --reload      # API + OpenAPI
-python -m app.worker               # scheduler and background job queue
+# backend/  (Python 3.12 + uv)  → http://localhost:8000/health , /openapi.json
+cd backend && uv sync --extra dev && uv run uvicorn app.main:app --reload
 
-# frontend/ (Node 20)
-npm install && npm run dev
+# frontend/ (Node 20+)          → http://localhost:5173
+cd frontend && npm install && npm run dev
 ```
+
+**Later phases** additionally need PostgreSQL and the worker:
+
+```sh
+docker compose up -d postgres            # local Postgres 16 (loopback only)
+cd backend && uv run alembic upgrade head && uv run python -m app.seed --demo
+uv run python -m app.worker              # scheduler + durable job queue
+```
+
+The end-to-end demo walkthrough lives in
+[`quickstart.md`](specs/001-smart-procurement/quickstart.md).
