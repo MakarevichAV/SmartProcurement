@@ -57,6 +57,7 @@ and [`research.md` §6](specs/001-smart-procurement/research.md).
 | [`specs/001-smart-procurement/research.md`](specs/001-smart-procurement/research.md) | Technical decisions and rationale |
 | [`specs/001-smart-procurement/data-model.md`](specs/001-smart-procurement/data-model.md) | Data model and state machines |
 | [`specs/001-smart-procurement/contracts/`](specs/001-smart-procurement/contracts/) | Contracts: REST API, AI output, execution adapter, source connector, LORM enforcement |
+| [`specs/001-smart-procurement/tasks.md`](specs/001-smart-procurement/tasks.md) | 167 dependency-ordered implementation tasks, grouped by user story |
 | [`specs/001-smart-procurement/quickstart.md`](specs/001-smart-procurement/quickstart.md) | End-to-end validation walkthrough |
 | [`CLAUDE.md`](CLAUDE.md) | Orientation guide for working in this repository |
 
@@ -69,8 +70,9 @@ Work is done through Spec Kit from the repository root:
 /speckit-specify        → feature specification       (done)
 /speckit-clarify        → clarifications in the spec  (done)
 /speckit-plan           → plan + contracts            (done)
-/speckit-tasks          → tasks.md                    ← next step
-/speckit-implement      → implementation from tasks.md
+/speckit-tasks          → tasks.md                    (done)
+/speckit-analyze        → cross-artifact consistency  (done — clean)
+/speckit-implement      → implementation from tasks.md  ← next step
 ```
 
 ## Running locally
