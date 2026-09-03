@@ -32,16 +32,16 @@ the root. Paths below are relative to the workspace root.
 
 **Purpose**: Initialize both repositories and local tooling.
 
-- [ ] T001 Create `backend/` repo: `git init`, `pyproject.toml` (Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0[async], Alembic, anthropic, cryptography, argon2-cffi, pyjwt, httpx, jsonschema, PyYAML, pytest, pytest-asyncio), package skeleton `backend/src/app/` with empty modules `api core identity enterprise integration domain observation analysis decision lorm policies execution verification audit jobs ai vendor` per plan.md Project Structure
-- [ ] T002 [P] Configure backend tooling in `backend/pyproject.toml`: ruff + black + mypy; add `backend/.editorconfig`; add `backend/Makefile` targets `lint test run worker migrate seed`
-- [ ] T003 [P] Create `frontend/` repo: `git init`, Vite + React 18 + TypeScript, Tailwind CSS, ESLint + Prettier; base folders `frontend/src/{app,api,features,components,lib}` per plan.md
-- [ ] T004 [P] Add `docker-compose.yml` at workspace root for local PostgreSQL 16 (plain — `pgvector` is not required in v1); document ports in `docs/development-setup.md`
-- [ ] T005 Backend config module `backend/src/app/core/config.py` using `pydantic-settings` (DATABASE_URL, JWT_SECRET, FERNET_KEY, LLM_PROVIDER, ANTHROPIC_API_KEY, token TTLs); add `backend/.env.example`
-- [ ] T006 Backend async DB layer `backend/src/app/core/db.py` (async engine, session factory, `Base`); initialize Alembic in `backend/alembic/` with async env
-- [ ] T007 [P] Backend base model mixins in `backend/src/app/core/models.py`: `UUIDPrimaryKey`, `Timestamps`, `EnterpriseScoped` (non-null `enterprise_id` FK), `AppendOnly` marker; helper for CHECK-constrained enum columns
-- [ ] T008 [P] Backend error handling in `backend/src/app/core/errors.py` + `backend/src/app/api/middleware.py`: unified error model `{error:{code,message,details,correlation_id}}`, exception handlers, `X-Correlation-Id` middleware
-- [ ] T009 [P] Backend test harness `backend/tests/conftest.py`: dockerised-Postgres fixture, async test client (httpx `AsyncClient`), transaction-rollback fixture, `DeterministicMockProvider` fixture registry under `backend/tests/fixtures/`
-- [ ] T010 [P] Frontend app shell `frontend/src/app/store.ts` (Redux Toolkit), `frontend/src/app/router.tsx` (React Router), `frontend/src/api/baseApi.ts` (RTK Query, bearer-token base query, unified-error normalization); add `frontend/scripts/gen-api-types.ts` to generate types from backend `/openapi.json`
+- [X] T001 Create `backend/` repo: `git init`, `pyproject.toml` (Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0[async], Alembic, anthropic, cryptography, argon2-cffi, pyjwt, httpx, jsonschema, PyYAML, pytest, pytest-asyncio), package skeleton `backend/src/app/` with empty modules `api core identity enterprise integration domain observation analysis decision lorm policies execution verification audit jobs ai vendor` per plan.md Project Structure
+- [X] T002 [P] Configure backend tooling in `backend/pyproject.toml`: ruff + black + mypy; add `backend/.editorconfig`; add `backend/Makefile` targets `lint test run worker migrate seed`
+- [X] T003 [P] Create `frontend/` repo: `git init`, Vite + React 18 + TypeScript, Tailwind CSS, ESLint + Prettier; base folders `frontend/src/{app,api,features,components,lib}` per plan.md
+- [X] T004 [P] Add `docker-compose.yml` at workspace root for local PostgreSQL 16 (plain — `pgvector` is not required in v1); document ports in `docs/development-setup.md`
+- [X] T005 Backend config module `backend/src/app/core/config.py` using `pydantic-settings` (DATABASE_URL, JWT_SECRET, FERNET_KEY, LLM_PROVIDER, ANTHROPIC_API_KEY, token TTLs); add `backend/.env.example`
+- [X] T006 Backend async DB layer `backend/src/app/core/db.py` (async engine, session factory, `Base`); initialize Alembic in `backend/alembic/` with async env
+- [X] T007 [P] Backend base model mixins in `backend/src/app/core/models.py`: `UUIDPrimaryKey`, `Timestamps`, `EnterpriseScoped` (non-null `enterprise_id` FK), `AppendOnly` marker; helper for CHECK-constrained enum columns
+- [X] T008 [P] Backend error handling in `backend/src/app/core/errors.py` + `backend/src/app/api/middleware.py`: unified error model `{error:{code,message,details,correlation_id}}`, exception handlers, `X-Correlation-Id` middleware
+- [X] T009 [P] Backend test harness `backend/tests/conftest.py`: dockerised-Postgres fixture, async test client (httpx `AsyncClient`), transaction-rollback fixture, `DeterministicMockProvider` fixture registry under `backend/tests/fixtures/`
+- [X] T010 [P] Frontend app shell `frontend/src/app/store.ts` (Redux Toolkit), `frontend/src/app/router.tsx` (React Router), `frontend/src/api/baseApi.ts` (RTK Query, bearer-token base query, unified-error normalization); add `frontend/scripts/gen-api-types.ts` to generate types from backend `/openapi.json`
 
 **Checkpoint**: both apps build and run an empty health route.
 

@@ -1,0 +1,22 @@
+# Local infrastructure for Smart Procurement development (T004).
+# Plain PostgreSQL 16 — pgvector is NOT required in v1.
+services:
+  postgres:
+    image: postgres:16
+    container_name: smartprocurement-postgres
+    environment:
+      POSTGRES_USER: sp
+      POSTGRES_PASSWORD: sp
+      POSTGRES_DB: smart_procurement
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sp -d smart_procurement"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
