@@ -16,8 +16,8 @@ Three separate Git repositories:
 | Repository | Contents |
 |------------|----------|
 | **SmartProcurement** (this one) | Constitution, specifications, plans, contracts, architecture docs. No application code. |
-| **SmartProcurement-Backend** | Python · FastAPI · PostgreSQL. REST API, domain logic, AI Decision Layer, LORM enforcement, policies, execution adapters, audit, background processing. Modular monolith + worker process. |
-| **SmartProcurement-Frontend** | React · TypeScript · Vite. Web UI for the Administrator, Buyer, and Approver roles. |
+| [**SmartProcurement-Backend**](https://github.com/MakarevichAV/SmartProcurement-Backend) | Python · FastAPI · PostgreSQL. REST API, domain logic, AI Decision Layer, LORM enforcement, policies, execution adapters, audit, background processing. Modular monolith + worker process. |
+| [**SmartProcurement-Frontend**](https://github.com/MakarevichAV/SmartProcurement-Frontend) | React · TypeScript · Vite. Web UI for the Administrator, Buyer, and Approver roles. |
 
 Backend and Frontend communicate only through a REST/OpenAPI contract. The `backend/` and
 `frontend/` directories inside this repository are standalone repositories and are
@@ -26,8 +26,8 @@ deliberately git-ignored here (no submodules).
 Layers: Frontend → Backend/API → AI Decision Layer → **LORM Responsibility/Enforcement** →
 Data/Integration → Execution → Persistence. The backend is the only security boundary.
 
-- Frontend: `<SmartProcurement-Frontend url>`
-- Backend: `<SmartProcurement-Backend url>`
+- Backend: <https://github.com/MakarevichAV/SmartProcurement-Backend>
+- Frontend: <https://github.com/MakarevichAV/SmartProcurement-Frontend>
 
 **Status**: Phase 1 (scaffolding) is implemented and runnable — FastAPI skeleton with
 `/health` + OpenAPI, and a Vite/React shell. Phases 2+ (identity/auth, LORM, domain, …) are
