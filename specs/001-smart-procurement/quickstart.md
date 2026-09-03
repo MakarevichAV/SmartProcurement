@@ -6,7 +6,7 @@ schemas. No implementation code here.
 
 ## 0. Prerequisites
 
-- PostgreSQL 16 with the `pgvector` extension available.
+- PostgreSQL 16 (plain; `pgvector` is **not** required in v1).
 - Python 3.12, Node 20.
 - Three repos checked out into one workspace:
   ```
@@ -34,9 +34,12 @@ cd backend
 uv sync                       # or: pip install -e .[dev]
 alembic upgrade head
 python -m app.seed --demo     # seeds: 1 enterprise, 3 roles, 3 users (admin/buyer/approver),
-                              #        8 capabilities at default levels
-                              #        (proc.supplier.add & proc.payment.release: l5_allowed=false),
-                              #        conservative verification tolerances
+                              #        8 capabilities at fixed seed levels (tasks.md T021):
+                              #          inventory.observe=L0  demand.observe=L1  risk.diagnose=L2
+                              #          order.recommend=L3    po.create=L3      replenish.routine=L4
+                              #          supplier.add=L4 (l5_allowed=false)  payment.release=L3 (l5_allowed=false)
+                              #        verification tolerances: price 10% / qty 10% / late 3d
+                              #          (supplier mismatch always material)
 ```
 
 Run the two backend processes and the frontend:
@@ -50,7 +53,7 @@ cd ../frontend && npm i && npm run dev   # SPA  → http://localhost:5173
 
 1. Log in as **admin**. Data Sources → **Connect** a `file` source; upload
    `backend/tests/fixtures/demo_enterprise.csv` (items, stock, suppliers, prices, lead times,
-   consumption, one open PO with a future `expected_at`).
+   consumption, production demand, one open PO with a future `expected_at`).
 2. **Test** → `health: available`.
 3. **Introspect** → `source_field[]` listed.
 4. **Mapping suggestions** → AI (mock) returns `MappingSuggestion[]`
@@ -79,7 +82,7 @@ the explanation lists the signals it used (FR-019); no UI was required for detec
 
 ## 5. L3 — recommendation only — validates US3, FR-021..FR-026
 
-1. Ensure `proc.po.create` is at **L3** (Capabilities screen).
+1. `proc.po.create` is at **L3** by the seed (T021) — no promotion needed here.
 2. As **buyer**: open the risk → **Request recommendation**.
 3. `generate_recommendation` produces a `ProcurementRecommendation` (contract §3):
    what / qty / when / supplier / why + expected outcome, risks, alternatives,
@@ -92,8 +95,11 @@ the explanation lists the signals it used (FR-019); no UI was required for detec
 
 ## 6. L4 — approve then execute — validates US4, FR-027..FR-033, FR-032a
 
-1. Promote `proc.po.create` **L3→L4**: Capabilities → create a `promotion_request`, approve
-   it as **approver**. (One level only — a request to jump to L5 is rejected.)
+1. Promote `proc.po.create` **L3→L4** via the Foundational promotion endpoint:
+   `POST /api/v1/capabilities/proc.po.create/promotion-requests` (as **buyer**), then
+   `POST /api/v1/promotion-requests/{id}/approve` (as **approver**). One level only — a
+   request that jumps to L5 is rejected. (The richer Capabilities screen arrives with US6;
+   this step works via the API from the start.)
 2. New risk cycle → a `procurement_action(status=prepared)` lands in **Approvals**.
 3. Open it as **buyer/approver**: the pre-approval view shows item, qty, supplier,
    price/cost, needed-by, AI explanation, risks, data used (FR-028).
@@ -111,7 +117,8 @@ role-gating of Approve/Reject all hold.
 
 ## 7. L5 — controlled autopilot — validates US5, FR-034..FR-045
 
-1. Promote `proc.replenish.routine` to **L5** prerequisites, then create an L5 **policy**
+1. Promote `proc.replenish.routine` **L4→L5** (one step — it is seeded at L4) via the
+   promotion endpoint, approved by **approver**. Then create an L5 **policy**
    (Autopilot / Policies) as **buyer** (author): capability `proc.replenish.routine`,
    `bounds` = { demo SKUs, `max_order_amount` = 5000, `period_aggregate` = {window:"30d",
    max_amount:40000}, `suppliers` = [approved demo supplier] }, `verification.window` = "14d",
@@ -135,7 +142,7 @@ enforced regardless of roles), FR-041/FR-042/FR-043 hold.
 ## 8. Verification & automatic demotion — validates US7, FR-054..FR-058
 
 1. For an executed L5 action, feed a "goods received" fixture with a **unit price 25 % above**
-   expected (beyond the tolerance).
+   expected — beyond the default `price_pct` tolerance of 10 % (T021).
 2. `run_verification` writes a `verification_result(status=failed, overall_material=true)`.
 3. `lorm/demotion.py` writes `capability_level_event(direction=demotion,
    trigger=verification_failure)` and drops `proc.replenish.routine` **one** level — no human

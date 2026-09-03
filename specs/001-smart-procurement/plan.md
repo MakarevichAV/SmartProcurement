@@ -37,9 +37,10 @@ execution directly.
 - Frontend: React 18, Vite 5, React Router, Redux Toolkit + RTK Query, Tailwind CSS,
   Vitest + React Testing Library, Playwright (E2E).
 
-**Storage**: PostgreSQL 16, single database. `pgvector` extension enabled but used **only**
-for semantic retrieval over unstructured supplier/quality/document text (opt-in per source);
-not a substitute for the relational procurement model. No separate vector DB in v1.
+**Storage**: PostgreSQL 16, single database. **v1 uses no `pgvector` and no vector columns** —
+semantic retrieval over unstructured supplier/quality/document text is a deferred extensibility
+option (research.md §13), not implemented in v1. No separate vector DB. Append-only tables are
+protected by a `forbid_mutation()` DB trigger (data-model.md §8/§12).
 
 **Testing**: pytest (backend unit/integration/contract), httpx AsyncClient (API), dockerised
 PostgreSQL for integration, Vitest + RTL (frontend), Playwright (end-to-end demo), k6 or
@@ -87,7 +88,7 @@ Constitution v1.0.0 — evaluation of each principle against this plan:
 | **VII. AI принимает решение, LORM определяет полномочия** | `analysis/`+`decision/` produce the buying decision; `lorm/` only authorizes. Every state-changing path calls `LormEnforcementService.evaluate()` before `execution/`. No bypass: `execution.dispatch()` requires an `EnforcementDecision` token. ✅ |
 | **VIII. Отделение принятия решения от исполнения** | `Recommendation` / `ProcurementAction` are ERP-independent structured records; `ExecutionAdapter` is a Protocol with ≥2 v1 implementations (simulated, generic REST); decision modules import no adapter code. ✅ (SC-014) |
 | **IX. Универсальность и адаптация к предприятию** | `SourceConnector` Protocol; `FieldMapping` persisted as explicit, human-confirmed config; AI mapping suggestions require confirmation (FR-004). No ERP-vendor coupling in domain model. ✅ |
-| **X. Аудитируемость** | `audit/` is a first-class append-only subsystem; `AuditRecord` carries the LORM §10.3 minimum set + spec FR-060 fields; recovery/verification/demotion events recorded; store is Postgres, not LLM context. ✅ |
+| **X. Аудитируемость** | `audit/` is a first-class append-only subsystem; `AuditRecord` carries the LORM §10.3 minimum set + spec FR-060 fields; recovery/verification/demotion events recorded; store is Postgres, not LLM context. Append-only enforced at the DB level by a `forbid_mutation()` trigger on `audit_record` and every `*_event` table (tasks.md T027), with app-level assertions as defense in depth. ✅ |
 | **XI. Безопасность** | Backend-enforced JWT auth + RBAC (FastAPI dependencies); external-source credentials encrypted at rest (`cryptography.Fernet`), key from env/secret store, never in plaintext columns, never in prompts (FR-068). LORM enforcement and RBAC are separate, both required. Frontend untrusted. ✅ |
 | **XII. Объяснимость решений** | `Explanation` entity (what/why/data-used/factors/confidence) attached to every `RiskFinding` and `Recommendation`; low-confidence → escalate, never autonomous (I-3, FR-025). ✅ |
 | **XIII. Архитектурное разделение** | Modular monolith with explicit module interfaces mapping 1:1 to the constitution's layers (see research.md §2). `api/`=Frontend boundary, `analysis/`+`ai/`=AI Decision Layer, `lorm/`=Enforcement, `integration/`=Data/Integration, `execution/`=Execution, SQLAlchemy models + `audit/`=Persistence. Modules communicate through service interfaces, not by reaching into each other's tables. ✅ |

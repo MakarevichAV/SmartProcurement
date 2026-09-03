@@ -136,6 +136,10 @@ audit), `examples/procurement.md`, `docs/trust-lifecycle.md`, `docs/hard-enforce
 
 ### 6a. Reused directly (vendored unmodified into `backend/src/app/vendor/lorm/`, Apache-2.0)
 
+Vendoring is **pinned**: implementation records the exact upstream commit SHA + tag + retrieval
+date in `backend/src/app/vendor/lorm/UPSTREAM.md` and commits the copied files, so the build
+never depends on fetching GitHub and upgrades are a deliberate, reviewable diff (tasks.md T019).
+
 | Artifact | Use in Smart Procurement |
 |---|---|
 | `schema/lorm-policy.schema.json` | The **canonical** shape of a stored L5 policy. Our DB row serializes to a document that validates against this schema. |
@@ -256,8 +260,10 @@ but undispatched durable actions → re-enqueued; every recovery step → `Audit
 
 **Decision**: `verification/` compares observed vs expected on price (% deviation), delivered
 quantity (% short), lead time (days late), and supplier identity (any mismatch = material).
-Tolerances live in `capability.verification_tolerances` (JSONB) with conservative defaults,
-optionally overridden per `policy`. Result: `verified | failed | unverifiable | pending`, with
+Tolerances live in `capability.verification_tolerances` (JSONB); **v1 defaults are fixed at
+`price_pct = 10`, `qty_short_pct = 10`, `late_days = 3`** (supplier mismatch always material),
+overridable per `capability` or per `policy`. These are product/demo defaults, not
+LORM-normative. Result: `verified | failed | unverifiable | pending`, with
 per-dimension measured deviation and a `material` flag. `failed` (material, unexplained) →
 `lorm/demotion.py`. Repeated `unverifiable` → surfaced to the approver, blocks L5 eligibility
 (SPEC §10.1). A `verification_window` per action bounds the wait; window elapsed with no data
@@ -299,19 +305,28 @@ same protocol.
 
 ---
 
-## 13. Persistence & pgvector
+## 13. Persistence (no vector columns in v1)
 
-**Decision**: PostgreSQL 16, one DB, SQLAlchemy 2.0 async + Alembic. `pgvector` extension
-enabled; an `embedding vector` column is added **only** to unstructured-text tables
-(supplier notes, quality/defect reports, attached documents) for semantic retrieval that
-feeds AI context. Structured procurement data stays fully relational. Every table carries
+**Decision**: PostgreSQL 16, one DB, SQLAlchemy 2.0 async + Alembic. **v1 stores unstructured
+supplier/quality notes as plain `text` and adds no vector columns and no `pgvector`
+dependency.** Structured procurement data is fully relational. Every table carries
 `enterprise_id` (FK, non-null) for multi-enterprise readiness even though v1 runs one.
+Append-only tables (`audit_record`, `capability_level_event`, `mapping_change_event`,
+`observation_signal`, `policy_approval`, `execution_attempt`) are guarded by a reusable
+`forbid_mutation()` DB trigger (tasks.md T027) with app-level `AppendOnly` assertions as
+defense in depth.
 
-**Rationale**: Matches plan input; avoids a second datastore; keeps the relational model
-authoritative (§4).
+**Extensibility (deferred, not v1)**: semantic retrieval over unstructured text — add
+`pgvector` + an `embedding` column on the relevant text tables + a retrieval step that feeds
+AI context — is a clean future feature behind the existing `ai/` context-assembly seam. It is
+explicitly out of v1 scope; do not add unused vector columns now.
+
+**Rationale**: Avoids a second datastore and an unused, untested code path; keeps the
+relational model authoritative (§4) and the v1 surface minimal.
 
 **Rejected**: dedicated vector DB (Constitution/plan say no without proven need); embeddings
-as a substitute for relational modelling (§4 forbids).
+as a substitute for relational modelling (§4 forbids); shipping vector columns with no
+producer/consumer in v1.
 
 ---
 
@@ -345,9 +360,13 @@ external-LLM cost/availability.
 
 ## 16. Open items intentionally deferred to `/speckit-tasks` or implementation
 
-- Exact default tolerance numbers (price %, qty %, days) — pick conservative values in
-  implementation, expose as config; not architecture.
+- Default verification tolerances are **fixed for v1**: price 10 %, quantity shortfall 10 %,
+  lateness 3 days, supplier mismatch always material — configurable per capability or policy
+  (data-model.md §7, tasks.md T021/T133). Not architecture.
 - Precise Dashboard layout / navigation (FR-073 allows UX refinement).
 - Pagination/sort defaults for list endpoints — standard cursor pagination, decide per
-  endpoint in contracts detailing.
-- Localization/i18n of the UI — English + Russian resource files planned; not a blocker.
+  endpoint in contracts detailing (tasks.md T166).
+- **Localization/i18n is deferred**: v1 ships English only. UI strings route through a single
+  `frontend/src/lib/i18n/` module to stay i18n-ready; bilingual resource files are out of v1
+  scope (tasks.md Notes).
+- Semantic retrieval / `pgvector` — deferred extensibility, see §13. No vector columns in v1.

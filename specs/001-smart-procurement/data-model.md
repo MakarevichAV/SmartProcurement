@@ -27,6 +27,8 @@ Global config boundary. `name`, `base_currency` (ISO 4217), `settings jsonb`,
 
 ### `role`
 `enterprise_id`, `key` (`administrator` | `buyer` | `approver`), `name`.
+`buyer` is the **canonical internal role name**; it corresponds to "Procurement Specialist /
+Buyer" in product terminology. `approver` corresponds to "Manager / Authorized Approver".
 
 ### `permission`
 Global catalogue: `key` (e.g. `datasource.manage`, `mapping.confirm`, `approval.act`,
@@ -84,10 +86,14 @@ Each row carries `source_provenance jsonb` (`{data_source_id, source_field_path,
 and `observability` (`fresh`|`stale`|`lost`) so the L0 map can show origin and gaps
 (FR-010/FR-011).
 
+**v1 has no vector columns and does not require `pgvector`.** Semantic retrieval over
+unstructured supplier/quality/document text is a planned extensibility option for a future
+feature (research.md §13); v1 stores such text as plain `text` only.
+
 ### `item` — `sku` (unique per enterprise), `name`, `category`, `unit`, `is_active`.
 ### `warehouse` — `code`, `name`, `location`.
 ### `stock_level` — `item_id`, `warehouse_id`, `quantity numeric`, `min_quantity numeric`, `as_of`.
-### `supplier` — `code`, `name`, `is_approved bool`, `notes text`, `notes_embedding vector` (pgvector, nullable).
+### `supplier` — `code`, `name`, `is_approved bool`, `notes text`.
 ### `item_supplier` — `item_id`, `supplier_id`, `preferred bool`. (approved supplier list for an item)
 ### `price` — `item_id`, `supplier_id`, `unit_price numeric`, `currency`, `valid_from`, `valid_to`.
 ### `lead_time` — `item_id`, `supplier_id`, `days numeric`, `as_of`. (observed / quoted)
@@ -96,9 +102,8 @@ and `observability` (`fresh`|`stale`|`lost`) so the L0 map can show origin and g
 `ordered_at`, `expected_at`, `received_at`, `received_quantity numeric`,
 `origin` (`external`|`smart_procurement`), `procurement_action_id` (nullable FK).
 ### `consumption` — `item_id`, `warehouse_id`, `quantity numeric`, `period_start`, `period_end`.
-### `production_demand` — `item_id`, `quantity numeric`, `need_by`, `source_ref`. (optional)
-### `quality_record` — `item_id`, `supplier_id`, `defect_rate numeric`, `note text`,
-`note_embedding vector` (nullable), `as_of`.
+### `production_demand` — `item_id`, `quantity numeric`, `need_by`, `source_ref`. (optional; drives `production_stop_risk`)
+### `quality_record` — `item_id`, `supplier_id`, `defect_rate numeric`, `note text`, `as_of`.
 
 ---
 
@@ -117,7 +122,7 @@ Partitioned by month (range on `observed_at`) for retention/pruning.
 `price_trend numeric`, `avg_supplier_delay_days numeric`, `computed_at`.
 Deterministic; this is the pre-AI aggregation guard (research.md §7a).
 
-### `observability_gap` (append-only)
+### `observability_gap` (mutable lifecycle — `closed_at` is set when the gap clears)
 `enterprise_id`, `scope` (`source`|`entity`|`capability`), `scope_ref`, `reason`
 (`source_unavailable`|`stale_data`|`ai_unavailable`), `opened_at`, `closed_at` (nullable).
 Feeds demotion (FR-015/FR-016a/§6.3).
@@ -197,11 +202,20 @@ authorized/prepared (undispatched, durable) ──(restart)──► re-enqueued
 `proc.supplier.add`, `proc.payment.release`),
 `level` (`L0`..`L5`), `l5_allowed bool` (false for `proc.supplier.add` and
 `proc.payment.release` — FR-049; enforced by CHECK + seed),
-`verification_tolerances jsonb` (`{price_pct, qty_short_pct, late_days}` with defaults;
-`supplier_mismatch` always material),
+`verification_tolerances jsonb` — **v1 defaults `{price_pct: 10, qty_short_pct: 10,
+late_days: 3}`**; supplier mismatch is always material; overridable per capability or per
+policy (product/demo defaults, not LORM-normative — FR-055a),
 `uncertainty_threshold numeric` (default 0.3).
-`level` is only ever **raised** by an explicit human action through `capability_promotion`
-(one step); only ever **lowered** by `demotion_event` (one step).
+
+**Seed levels (fixed in `lorm/seed.py`, tasks.md T021)**: `proc.inventory.observe`=L0,
+`proc.demand.observe`=L1, `proc.risk.diagnose`=L2, `proc.order.recommend`=L3,
+`proc.po.create`=L3, `proc.replenish.routine`=L4, `proc.supplier.add`=L4 (`l5_allowed=false`),
+`proc.payment.release`=L3 (`l5_allowed=false`). Story tests set/promote the level they need
+explicitly.
+
+`level` is only ever **raised** by an explicit human action through `capability_service`
+(one step; the minimal version lives in the Foundational phase); only ever **lowered** by
+`demotion_event` (one step).
 
 ### `capability_level_event` (append-only) — unified history (FR-050/FR-058)
 `capability_id`, `direction` (`promotion`|`demotion`), `from_level`, `to_level`,
@@ -275,6 +289,23 @@ Repeated `unverifiable` for a capability ⇒ surfaced to approver, blocks L5 eli
 
 ### `demotion_event` — represented by `capability_level_event` rows with `direction=demotion`
 (kept as one history table; no separate table needed).
+
+### `execution_attempt` append-only note
+`execution_attempt` (and every other table marked *append-only* in this document —
+`audit_record`, `capability_level_event`, `mapping_change_event`, `observation_signal`,
+`policy_approval`) is protected at the database level by a reusable `forbid_mutation()` PL/pgSQL
+trigger that raises on UPDATE/DELETE (tasks.md T027, FR-063, Principle X). Application-level
+`AppendOnly` assertions remain as defense in depth.
+
+### Spec-entity mapping (no dedicated tables)
+- **"Approval (L4)"** (spec Key Entities) is not a table. An L4 approve/reject is the
+  `procurement_action` state transition (`prepared → authorized` or `prepared → rejected`,
+  with the rejection reason on the action) **plus** append-only `audit_record` events
+  `l4_approved` / `l4_rejected` carrying `authorizer` (the user) and timestamp. A dedicated
+  `approval` table is added only if implementation requires it.
+- **"Execution / Order"** (spec Key Entities) maps to `procurement_action` + its
+  `execution_attempt` rows (and, for the simulated adapter, `simulated_order`). There is no
+  separate `order` table.
 
 ---
 
@@ -350,6 +381,8 @@ capability 1─* policy_draft_suggestion
 | `execution.dispatch()` requires a valid `EnforcementDecision` | FR-069/§7 | function signature guard |
 | Action state persisted before dispatch; idempotent send; reconcile on restart | FR-032a | `execution/` + `reconcile_executions` job |
 | Every L4/L5 `audit_record` has evidence_ref + authorizer + verified | FR-060/FR-061, I-6 | `audit/` writer asserts required fields |
+| Append-only tables reject UPDATE/DELETE | FR-063, Principle X | `forbid_mutation()` DB trigger (tasks.md T027) + `AppendOnly` app assertions (defense in depth) |
+| Verification "material" thresholds | FR-055a | `capability.verification_tolerances` defaults `{price_pct:10, qty_short_pct:10, late_days:3}`, supplier mismatch always material; per-capability / per-policy override in `verification/tolerances.py` |
 | Low `confidence` / high `uncertainty` ⇒ escalate, never autonomous | FR-025, I-3 | `LormEnforcementService.evaluate()` |
 | AI outputs validated against Pydantic schema; invalid ⇒ fail-safe | FR-016a, FR-071 | `ai/` provider wrapper |
 | Secrets never in API responses / prompts / plaintext columns | FR-068, §15 | `secret` table shape + serializer allowlist |
