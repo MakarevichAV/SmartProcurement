@@ -62,7 +62,7 @@ before AI workflows and UI.
 - [ ] T012 Alembic migration for identity + `enterprise` tables in `backend/alembic/versions/`
 - [ ] T013 Password + token services `backend/src/app/identity/security.py`: Argon2id hash/verify, JWT issue/verify (access + refresh), refresh-token rotation & revocation
 - [ ] T014 `AuthProvider` protocol + local implementation in `backend/src/app/identity/auth_provider.py`; FastAPI deps `get_current_user` and `require(permission)` in `backend/src/app/identity/deps.py`
-- [ ] T015 Auth router `backend/src/app/api/routers/auth.py`: `POST /api/v1/auth/login|refresh|logout`, `GET /api/v1/me` (user + effective permissions); wire into `backend/src/app/main.py`
+- [ ] T015 Auth router `backend/src/app/api/routers/auth.py`: `POST /api/v1/auth/login|refresh|logout`, `GET /api/v1/me` (user + effective permissions); `login`/`refresh` return the access token in the body and set the refresh token as an **httpOnly, Secure, SameSite** cookie; `logout` clears the cookie and revokes the token; wire into `backend/src/app/main.py`
 - [ ] T016 [P] Auth contract tests `backend/tests/contract/test_auth.py` (login/refresh/logout/me, 401 paths) per contracts/rest-api.md
 
 ### Enterprise, secrets
@@ -105,7 +105,7 @@ before AI workflows and UI.
 ### Seed + frontend shell
 
 - [ ] T036 Demo seed CLI `backend/src/app/seed.py` (`python -m app.seed --demo`): one `enterprise`; the full permission catalogue (`datasource.manage`, `mapping.confirm`, `domain.read`, `recommendation.request`, `approval.act`, `policy.author`, `policy.approve`, `capability.read`, `capability.promote`, `audit.read`, `user.manage` — data-model.md §1) mapped to roles; users `admin`/`buyer`/`approver`; capability seed (T021)
-- [ ] T037 [P] Frontend auth + shell: `frontend/src/features/auth/` (login page, token storage, refresh), `frontend/src/components/AppLayout.tsx` with nav for Dashboard, Risks/Recommendations, Approvals, Autopilot/Policies, Capabilities, Data Sources, Executions/Orders, Audit, Users & Roles; protected-route wrapper; `frontend/src/api/authApi.ts`
+- [ ] T037 [P] Frontend auth + shell: `frontend/src/features/auth/` (login page; **access token in memory only via `src/lib/authToken` — never `localStorage`/`sessionStorage`**; refresh token as an httpOnly cookie set by the backend; silent renew on load / on 401 via `POST /auth/refresh`), `frontend/src/components/AppLayout.tsx` with nav for Dashboard, Risks/Recommendations, Approvals, Autopilot/Policies, Capabilities, Data Sources, Executions/Orders, Audit, Users & Roles; protected-route wrapper; `frontend/src/api/authApi.ts`
 - [ ] T038 [P] Frontend error surface `frontend/src/lib/errorToast.ts` + RTK Query error middleware rendering the unified error model
 
 **Checkpoint**: login works; seeded users/roles/capabilities exist at the levels in T021;

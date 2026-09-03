@@ -93,14 +93,19 @@ table later behind the same `JobQueue` interface if throughput ever demands it.
 ## 4. Authentication & authorization
 
 **Decision**: Local username/password with **Argon2id** hashing; **JWT** access tokens
-(~15 min) + rotating refresh tokens (persisted, revocable). RBAC = `role → permission` map;
+(~15 min) + rotating refresh tokens (persisted, revocable). **Token placement**: the access
+token is returned in the login/refresh response body and held **in memory only** by the SPA
+(module variable, never `localStorage`/`sessionStorage` — XSS exposure); the refresh token is
+delivered as an **httpOnly, Secure, SameSite** cookie and is the only thing that survives a
+reload, driving a silent renew on app load and on 401. RBAC = `role → permission` map;
 FastAPI dependencies (`require(permission)`) guard every route; LORM enforcement is a
 **separate** check on top for state-changing procurement actions. Auth logic sits behind an
 `AuthProvider` interface.
 
-**Rationale**: Stateless, standard, no external IdP to stand up; works cleanly for an SPA on a
-different origin (bearer token, no CSRF surface). Satisfies FR-064–FR-067 and Constitution XI.
-`AuthProvider` seam lets OIDC/SSO drop in later.
+**Rationale**: Stateless access checks, standard, no external IdP to stand up. In-memory
+access token + httpOnly refresh cookie is the current SPA best practice: an XSS cannot exfil
+a long-lived credential, and the refresh cookie is not script-readable. Satisfies FR-064–FR-067
+and Constitution XI. `AuthProvider` seam lets OIDC/SSO drop in later.
 
 **Rejected**: Full OAuth2/OIDC + external IdP (infra/config overhead, no v1 value);
 server-side session cookies (cross-origin CSRF handling, shared session store).
