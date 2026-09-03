@@ -22,12 +22,17 @@ Three repositories in one workspace (`SmartProcurement/`):
 docker compose up -d postgres
 ```
 
-| Service | Host port | Container | Credentials |
-|---------|-----------|-----------|-------------|
-| PostgreSQL 16 | **5432** | `smartprocurement-postgres` | user `sp` / pass `sp` / db `smart_procurement` |
+| Service | Host binding | Container | Credentials (defaults) |
+|---------|--------------|-----------|------------------------|
+| PostgreSQL 16 | **127.0.0.1:5432** (loopback only) | `smartprocurement-postgres` | user `sp` / pass `sp` / db `smart_procurement` |
 
 DSN: `postgresql+asyncpg://sp:sp@localhost:5432/smart_procurement`.
 `pgvector` is **not** used in v1.
+
+Credentials and port are overridable via the environment (`POSTGRES_USER`, `POSTGRES_PASSWORD`,
+`POSTGRES_DB`, `POSTGRES_PORT`) or a root `.env`. The defaults are throwaway local values; this
+compose file is for local development only and binds Postgres to loopback so it is not
+reachable from other machines.
 
 ## Backend
 
