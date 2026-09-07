@@ -19,9 +19,12 @@ sit inside this directory and are meant to be git-ignored by the root:
 
 `backend/` and `frontend/` are working apps — **Phase 1 (Setup) and Phase 2 (Foundational)
 are complete; Phase 3 has not started** (see `specs/001-smart-procurement/tasks.md` and the
-root `README.md` for the implemented-vs-planned breakdown). They are **not** tracked from the
-root repo — no submodules; the root `.gitignore` excludes `backend/`, `frontend/`, and
-`.idea/`. Frontend and backend communicate only through the REST/OpenAPI contract in
+root `README.md` for the implemented-vs-planned breakdown). The Phase 2 frontend shell also
+has a completed **UI/design foundation** (design tokens, in-repo UI primitives, redesigned
+login + authenticated shell, responsive navigation, dashboard shell) — visual only, no
+business functionality. They are **not** tracked from the root repo — no submodules; the root
+`.gitignore` excludes `backend/`, `frontend/`, and `.idea/`. Frontend and backend communicate
+only through the REST/OpenAPI contract in
 `specs/001-smart-procurement/contracts/rest-api.md`.
 
 **Branching** (all three repos, see `docs/development-setup.md`): `feature/<slug>` for new

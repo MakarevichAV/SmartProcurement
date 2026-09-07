@@ -90,7 +90,7 @@ phases):
 | Phase | Scope | Status |
 |-------|-------|--------|
 | **Phase 1 — Setup** | Repo scaffolds, tooling, Docker Postgres, app skeletons | ✅ **complete** (T001–T010) |
-| **Phase 2 — Foundational** | Identity/auth, RBAC, enterprise, capability registry + minimal promotion, audit + append-only guard, job queue/worker, AI provider seam, app shell | ✅ **complete** (T011–T038) |
+| **Phase 2 — Foundational** | Identity/auth, RBAC, enterprise, capability registry + minimal promotion, audit + append-only guard, job queue/worker, AI provider seam, app shell + UI/design foundation | ✅ **complete** (T011–T038) |
 | **Phase 3 — US1: Data sources & L0 map** | Connectors, field mappings, domain map | ⛔ **not started** |
 | Phases 4–12 | Observation, risk/recommendation (L2/L3), L4 approval + execution, L5 policies, verification & demotion, audit UI, user admin, polish | ⛔ not started |
 
@@ -128,11 +128,19 @@ phases):
 
 **Frontend**
 
-- Vite/React app **shell**: login screen, silent refresh on load, protected routing.
-- **Login / logout**; **authenticated user profile** (name, roles, effective permissions) in
-  the header; **navigation shell** with the nine product areas.
-- Access token held **in memory only** (never in `localStorage`); errors surfaced as toasts
-  from the backend's unified error model.
+- Vite/React app **shell** on a reusable **UI/design foundation**: semantic design tokens
+  (light + dark), IBM Plex typography, and an in-repo set of UI primitives (no component or
+  icon library).
+- **Redesigned login** (navy split-screen brand panel + form) → silent refresh on load →
+  protected routing → **authenticated shell**: sidebar navigation grouped by operational
+  layer, a header with the signed-in user's name, role(s) and **Sign out**. **Responsive** —
+  persistent sidebar from the `lg` breakpoint, overlay drawer below it (`Escape` / scrim /
+  nav to close).
+- **Dashboard shell** — page header, stat tiles showing `—` placeholders, empty-state
+  panels; structure only, no data until Phase 3. Every other business screen is an
+  intentional "planned for a later phase" placeholder.
+- Access token held **in memory only** (never in `localStorage`); backend errors surfaced as
+  toasts from the unified error model.
 - OpenAPI type-generation workflow (`npm run gen:api`).
 
 ### What is *not* implemented yet (planned)
@@ -141,9 +149,10 @@ Everything past the foundation, including: data-source connectors and the L0 dom
 the observation loop, risk detection and AI explanations (L2); recommendations and the
 `allow / ask / deny` enforcement gate (L3); L4 approval + execution adapters; L5 autopilot
 policies; verification and automatic demotion; audit-query endpoints; user-management
-endpoints; and **every business screen in the UI** (Dashboard, Risks/Recommendations,
-Approvals, Autopilot/Policies, Capabilities, Data Sources, Executions/Orders, Audit,
-Users & Roles) — these are **placeholder pages** until their phase lands.
+endpoints; and **every business screen in the UI** (Risks/Recommendations, Approvals,
+Autopilot/Policies, Capabilities, Data Sources, Executions/Orders, Audit, Users & Roles) —
+these are **placeholder pages**, and the Dashboard is a data-less shell, until their phase
+lands.
 
 ## Running locally
 

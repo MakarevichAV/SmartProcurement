@@ -26,10 +26,12 @@ review together. Branch off `main`; merge back to `main` when the slice is done.
 
 ## Status
 
-Phase 1 (Setup) and Phase 2 (Foundational) are complete; Phase 3 has not started. The stack
-below is fully runnable: FastAPI + PostgreSQL, auth/refresh/RBAC, the capability registry and
-one-level promotion, append-only audit, the job-queue worker, and the React app shell (login +
-navigation; business screens are placeholders). See the root `README.md` for the
+Phase 1 (Setup) and Phase 2 (Foundational) are complete, including a UI/design foundation for
+the Phase 2 shell; Phase 3 has not started. The stack below is fully runnable: FastAPI +
+PostgreSQL, auth/refresh/RBAC, the capability registry and one-level promotion, append-only
+audit, the job-queue worker, and the React app — a redesigned login, the responsive
+authenticated navigation shell (design tokens + in-repo UI primitives) and a dashboard shell;
+other business screens are placeholders. See the root `README.md` for the
 implemented-vs-planned breakdown.
 
 ## Prerequisites
