@@ -17,9 +17,11 @@ sit inside this directory and are meant to be git-ignored by the root:
 | `./backend/` | `SmartProcurement-Backend` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0 async, Alembic, PostgreSQL 16 |
 | `./frontend/` | `SmartProcurement-Frontend` | React 18, TypeScript, Vite, Redux Toolkit + RTK Query, Tailwind |
 
-`backend/` and `frontend/` now exist as scaffolded repos (Phase 1). They are **not** tracked
-from the root repo — no submodules; the root `.gitignore` excludes `backend/`, `frontend/`,
-and `.idea/`. Frontend and backend communicate only through the REST/OpenAPI contract in
+`backend/` and `frontend/` are working apps — **Phase 1 (Setup) and Phase 2 (Foundational)
+are complete; Phase 3 has not started** (see `specs/001-smart-procurement/tasks.md` and the
+root `README.md` for the implemented-vs-planned breakdown). They are **not** tracked from the
+root repo — no submodules; the root `.gitignore` excludes `backend/`, `frontend/`, and
+`.idea/`. Frontend and backend communicate only through the REST/OpenAPI contract in
 `specs/001-smart-procurement/contracts/rest-api.md`.
 
 **Branching** (all three repos, see `docs/development-setup.md`): `feature/<slug>` for new
@@ -35,11 +37,11 @@ commands, in dependency order:
 ```
 /speckit-constitution   → .specify/memory/constitution.md   (done: v1.0.0)
 /speckit-specify        → specs/<NNN-slug>/spec.md           (done: 001-smart-procurement)
-/speckit-clarify        → appends ## Clarifications to spec.md
+/speckit-clarify        → appends ## Clarifications to spec.md   (done)
 /speckit-plan           → plan.md + research.md + data-model.md + contracts/ + quickstart.md (done)
-/speckit-tasks          → tasks.md                           (NOT yet generated — this is the next step)
-/speckit-analyze        → cross-artifact consistency check (spec ↔ plan ↔ tasks)
-/speckit-implement      → executes tasks.md
+/speckit-tasks          → tasks.md                           (done: 167 tasks, 12 phases)
+/speckit-analyze        → cross-artifact consistency check (spec ↔ plan ↔ tasks)  (done — clean)
+/speckit-implement      → executes tasks.md   (Phases 1–2 complete; Phase 3 next)
 ```
 
 The active feature directory is stored in `.specify/feature.json` (git-ignored, per-checkout
@@ -89,7 +91,7 @@ LORM invariants that shape the data model and API (see `data-model.md`, `contrac
   *before* its effects count as complete. Audit is a first-class subsystem, independent of any
   LLM context.
 
-## Backend architecture (as planned — for when code exists)
+## Backend architecture (foundation built in Phase 2; later modules still planned)
 
 - **Modular monolith** `backend/src/app/<module>/` (each module owns its tables + a service
   interface) **plus a second process** `python -m app.worker` sharing the same code/DB. The
