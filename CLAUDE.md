@@ -17,10 +17,15 @@ sit inside this directory and are meant to be git-ignored by the root:
 | `./backend/` | `SmartProcurement-Backend` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0 async, Alembic, PostgreSQL 16 |
 | `./frontend/` | `SmartProcurement-Frontend` | React 18, TypeScript, Vite, Redux Toolkit + RTK Query, Tailwind |
 
-`backend/` and `frontend/` do not exist yet. When they do, do **not** track them from the root
-repo — no submodules; add them to a root `.gitignore` (which does not exist yet and should be
-created before the first commit, alongside `.idea/`). Frontend and backend communicate only
-through the REST/OpenAPI contract in `specs/001-smart-procurement/contracts/rest-api.md`.
+`backend/` and `frontend/` now exist as scaffolded repos (Phase 1). They are **not** tracked
+from the root repo — no submodules; the root `.gitignore` excludes `backend/`, `frontend/`,
+and `.idea/`. Frontend and backend communicate only through the REST/OpenAPI contract in
+`specs/001-smart-procurement/contracts/rest-api.md`.
+
+**Branching** (all three repos, see `docs/development-setup.md`): `feature/<slug>` for new
+functionality / spec phases, `fix/<slug>` for bug fixes, `main` as the always-runnable
+integration branch. A cross-repo change uses the **same branch name** in every affected repo.
+Branch off `main`; don't commit straight to `main`.
 
 ## Spec-driven workflow (this repo's "commands")
 

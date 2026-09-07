@@ -10,7 +10,19 @@ Three repositories in one workspace (`SmartProcurement/`):
 
 `backend/` and `frontend/` are standalone git repos, git-ignored by the root.
 
-## Prerequisites
+## Branching
+
+Each of the three repos uses the same convention:
+
+| Prefix | Purpose | Example |
+|--------|---------|---------|
+| `feature/<slug>` | new functionality / a spec phase | `feature/foundational` |
+| `fix/<slug>` | bug fixes (introduced as needed) | `fix/policy-expiry-scan` |
+| `main` | integration branch; always runnable | — |
+
+A change that spans repos (e.g. a REST contract update touching backend and frontend) uses
+the **same branch name in every affected repo**, so the coordinated work is easy to find and
+review together. Branch off `main`; merge back to `main` when the slice is done.
 
 - Python 3.12 + [uv](https://docs.astral.sh/uv/)
 - Node 20+ (developed against Node 24)
