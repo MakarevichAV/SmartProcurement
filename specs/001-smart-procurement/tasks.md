@@ -126,30 +126,30 @@ confirm mappings, see the Domain Map populated; nothing is applied without confi
 
 ### Tests for User Story 1
 
-- [ ] T039 [P] [US1] Contract tests `backend/tests/contract/test_data_sources.py` for `/data-sources` (CRUD, `/test`, `/introspect`, `/mapping-suggestions`, `/health-history`) per contracts/rest-api.md
-- [ ] T040 [P] [US1] Contract tests `backend/tests/contract/test_mappings.py` for `/mappings` (create, `/confirm`, `/reject`, `/retire`, PATCH) and `/data-sources/{id}/mappings`
-- [ ] T041 [P] [US1] Contract tests `backend/tests/contract/test_domain_map.py` for `/domain/map` and `/domain/{entity}` (provenance + observability fields present)
-- [ ] T042 [P] [US1] AI output test `backend/tests/integration/test_mapping_suggestion.py`: `MappingSuggestion` schema validation, unknown `source_field_path` dropped, nothing auto-applied (contracts/ai-structured-output.md §1)
-- [ ] T043 [P] [US1] Integration test `backend/tests/integration/test_onboarding_journey.py`: file source → test → introspect → suggest → confirm subset → sync → domain rows created with `source_provenance`
+- [X] T039 [P] [US1] Contract tests `backend/tests/contract/test_data_sources.py` for `/data-sources` (CRUD, `/test`, `/introspect`, `/mapping-suggestions`, `/health-history`) per contracts/rest-api.md
+- [X] T040 [P] [US1] Contract tests `backend/tests/contract/test_mappings.py` for `/mappings` (create, `/confirm`, `/reject`, `/retire`, PATCH) and `/data-sources/{id}/mappings`
+- [X] T041 [P] [US1] Contract tests `backend/tests/contract/test_domain_map.py` for `/domain/map` and `/domain/{entity}` (provenance + observability fields present)
+- [X] T042 [P] [US1] AI output test `backend/tests/integration/test_mapping_suggestion.py`: `MappingSuggestion` schema validation, unknown `source_field_path` dropped, nothing auto-applied (contracts/ai-structured-output.md §1)
+- [X] T043 [P] [US1] Integration test `backend/tests/integration/test_onboarding_journey.py`: file source → test → introspect → suggest → confirm subset → sync → domain rows created with `source_provenance`
 
 ### Implementation for User Story 1
 
-- [ ] T044 [P] [US1] Integration models in `backend/src/app/integration/models.py`: `data_source`, `source_field`, `field_mapping`, `mapping_change_event` (call `attach_append_only` for `mapping_change_event`) (data-model.md §2); migration
-- [ ] T045 [P] [US1] Canonical domain models in `backend/src/app/domain/models.py`: `item`, `warehouse`, `stock_level`, `supplier` (`notes text`), `item_supplier`, `price`, `lead_time`, `purchase_order`, `consumption`, `production_demand`, `quality_record` (`note text`), each with `source_provenance` jsonb + `observability` enum (data-model.md §3); migration. **No vector columns / no `pgvector` in v1** — semantic retrieval is deferred extensibility (research.md §13).
-- [ ] T046 [US1] `SourceConnector` protocol + models in `backend/src/app/integration/connectors/base.py` (contracts/source-connector.md)
-- [ ] T047 [P] [US1] `RestSourceConnector` in `backend/src/app/integration/connectors/rest.py` (paths, pagination, incremental param, auth via `SecretStore`)
-- [ ] T048 [P] [US1] `FileSourceConnector` in `backend/src/app/integration/connectors/file.py` (CSV/JSON upload parse)
-- [ ] T049 [P] [US1] `SqlSourceConnector` in `backend/src/app/integration/connectors/sql.py` (read-only DSN; reject non-`SELECT`)
-- [ ] T050 [US1] Data-source service `backend/src/app/integration/service.py`: create/update, `test_connection` → `data_source.health` + open/close `observability_gap`, `describe_schema` → persist `source_field`
-- [ ] T051 [US1] Mapping-suggestion orchestration in `backend/src/app/integration/mapping_ai.py` + `suggest_mapping` job handler: call `generate_structured(MappingSuggestionSet)`, persist each as `field_mapping(status=suggested)` (FR-003/FR-004)
-- [ ] T052 [US1] `FieldMapping` lifecycle service `backend/src/app/integration/mapping_service.py`: confirm/reject/retire/edit → append `mapping_change_event`; only `confirmed` mappings exposed to sync (FR-005/FR-006)
-- [ ] T053 [US1] Sync service `backend/src/app/integration/sync.py` + `observe_source` job handler (data path only; signal diffing added in US2): `fetch(since)` → map through confirmed `field_mapping` → upsert `domain` rows with `source_provenance` + `observability` (FR-007/FR-013)
-- [ ] T054 [US1] Domain-map read service `backend/src/app/domain/map_service.py`: entity/relationship summary + per-entity source origin + stale/lost flags (FR-008–FR-011)
-- [ ] T055 [US1] Routers: `backend/src/app/api/routers/data_sources.py` and `mappings.py` and `domain.py` (endpoints per contracts/rest-api.md); register in `main.py`; permissions `datasource.manage`, `mapping.confirm`, `domain.read`
-- [ ] T056 [P] [US1] Frontend `frontend/src/api/dataSourcesApi.ts` + `frontend/src/api/domainApi.ts` (RTK Query slices)
-- [ ] T057 [P] [US1] Frontend Data Sources feature `frontend/src/features/datasources/`: list, connect form, test, introspect, mapping-review table with confirm/edit/reject, health history
-- [ ] T058 [P] [US1] Frontend Domain Map feature `frontend/src/features/domain/`: entity list/detail with provenance and observability badges
-- [ ] T059 [US1] Seed fixture `backend/tests/fixtures/demo_enterprise.csv` (items, stock, suppliers, prices, lead times, consumption, production demand, one open PO with future `expected_at`) used by quickstart §3
+- [X] T044 [P] [US1] Integration models in `backend/src/app/integration/models.py`: `data_source`, `source_field`, `field_mapping`, `mapping_change_event` (call `attach_append_only` for `mapping_change_event`) (data-model.md §2); migration
+- [X] T045 [P] [US1] Canonical domain models in `backend/src/app/domain/models.py`: `item`, `warehouse`, `stock_level`, `supplier` (`notes text`), `item_supplier`, `price`, `lead_time`, `purchase_order`, `consumption`, `production_demand`, `quality_record` (`note text`), each with `source_provenance` jsonb + `observability` enum (data-model.md §3); migration. **No vector columns / no `pgvector` in v1** — semantic retrieval is deferred extensibility (research.md §13).
+- [X] T046 [US1] `SourceConnector` protocol + models in `backend/src/app/integration/connectors/base.py` (contracts/source-connector.md)
+- [X] T047 [P] [US1] `RestSourceConnector` in `backend/src/app/integration/connectors/rest.py` (paths, pagination, incremental param, auth via `SecretStore`)
+- [X] T048 [P] [US1] `FileSourceConnector` in `backend/src/app/integration/connectors/file.py` (CSV/JSON upload parse)
+- [X] T049 [P] [US1] `SqlSourceConnector` in `backend/src/app/integration/connectors/sql.py` (read-only DSN; reject non-`SELECT`)
+- [X] T050 [US1] Data-source service `backend/src/app/integration/service.py`: create/update, `test_connection` → `data_source.health` + open/close `observability_gap`, `describe_schema` → persist `source_field`
+- [X] T051 [US1] Mapping-suggestion orchestration in `backend/src/app/integration/mapping_ai.py` + `suggest_mapping` job handler: call `generate_structured(MappingSuggestionSet)`, persist each as `field_mapping(status=suggested)` (FR-003/FR-004)
+- [X] T052 [US1] `FieldMapping` lifecycle service `backend/src/app/integration/mapping_service.py`: confirm/reject/retire/edit → append `mapping_change_event`; only `confirmed` mappings exposed to sync (FR-005/FR-006)
+- [X] T053 [US1] Sync service `backend/src/app/integration/sync.py` + `observe_source` job handler (data path only; signal diffing added in US2): `fetch(since)` → map through confirmed `field_mapping` → upsert `domain` rows with `source_provenance` + `observability` (FR-007/FR-013)
+- [X] T054 [US1] Domain-map read service `backend/src/app/domain/map_service.py`: entity/relationship summary + per-entity source origin + stale/lost flags (FR-008–FR-011)
+- [X] T055 [US1] Routers: `backend/src/app/api/routers/data_sources.py` and `mappings.py` and `domain.py` (endpoints per contracts/rest-api.md); register in `main.py`; permissions `datasource.manage`, `mapping.confirm`, `domain.read`
+- [X] T056 [P] [US1] Frontend `frontend/src/api/dataSourcesApi.ts` + `frontend/src/api/domainApi.ts` (RTK Query slices)
+- [X] T057 [P] [US1] Frontend Data Sources feature `frontend/src/features/datasources/`: list, connect form, test, introspect, mapping-review table with confirm/edit/reject, health history
+- [X] T058 [P] [US1] Frontend Domain Map feature `frontend/src/features/domain/`: entity list/detail with provenance and observability badges
+- [X] T059 [US1] Seed fixture `backend/tests/fixtures/demo_enterprise.csv` (items, stock, suppliers, prices, lead times, consumption, production demand, one open PO with future `expected_at`) used by quickstart §3
 
 **Checkpoint**: US1 fully functional and testable on its own (MVP).
 

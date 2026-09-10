@@ -91,10 +91,10 @@ phases):
 |-------|-------|--------|
 | **Phase 1 — Setup** | Repo scaffolds, tooling, Docker Postgres, app skeletons | ✅ **complete** (T001–T010) |
 | **Phase 2 — Foundational** | Identity/auth, RBAC, enterprise, capability registry + minimal promotion, audit + append-only guard, job queue/worker, AI provider seam, app shell + UI/design foundation | ✅ **complete** (T011–T038) |
-| **Phase 3 — US1: Data sources & L0 map** | Connectors, field mappings, domain map | ⛔ **not started** |
+| **Phase 3 — US1: Data sources & L0 map** | REST/file/SQL connectors, schema introspection, AI-suggested + human-confirmed field mappings, sync into the canonical domain, L0 Domain Map with provenance & observability | ✅ **complete** (T039–T059) |
 | Phases 4–12 | Observation, risk/recommendation (L2/L3), L4 approval + execution, L5 policies, verification & demotion, audit UI, user admin, polish | ⛔ not started |
 
-### What works today (Phase 1 + 2)
+### What works today (Phase 1 + 2 + 3/US1)
 
 **Backend**
 
@@ -124,7 +124,18 @@ phases):
   schema and, on persistent failure, opens an observability gap + writes an `ai_unavailable`
   audit record instead of proceeding.
 - Vendored LORM policy schema + validator (pinned) with a backend adapter.
-- Demo seed CLI; 30 automated tests; ruff + black + `mypy --strict` clean.
+- **Data sources & L0 domain map (US1)** — `data_source` / `source_field` / `field_mapping`
+  (+ append-only `mapping_change_event`) and the 11 canonical procurement entities, each row
+  carrying `source_provenance` + an `observability` state. Swappable `SourceConnector`
+  (`file`, `rest`, `sql` — SQL is SELECT-only) behind a registry; `POST /data-sources`,
+  `/test`, `/introspect`, `/upload`, `/mapping-suggestions`, `/health-history`. AI proposes
+  mappings (`MappingSuggestionSet`, unknown source fields dropped) but **nothing is applied
+  until a human confirms** — `/mappings/{id}/confirm|reject|retire`, `PATCH /mappings/{id}`,
+  each logged. A `sync_source` service + `observe_source` job maps confirmed fields into the
+  domain (data path only — no signal diffing / risk analysis yet). `GET /domain/map` and
+  `GET /domain/{entity}` expose counts, per-entity provenance and observability.
+- Demo seed CLI + `tests/fixtures/demo_enterprise.csv`; 52 automated tests; ruff + black +
+  `mypy --strict` clean; migrations round-trip with no drift.
 
 **Frontend**
 
@@ -137,22 +148,28 @@ phases):
   persistent sidebar from the `lg` breakpoint, overlay drawer below it (`Escape` / scrim /
   nav to close).
 - **Dashboard shell** — page header, stat tiles showing `—` placeholders, empty-state
-  panels; structure only, no data until Phase 3. Every other business screen is an
-  intentional "planned for a later phase" placeholder.
+  panels; structure only, no data yet. Business screens past US1 remain intentional
+  "planned for a later phase" placeholders.
+- **Data Sources & Domain Map screens (US1)** — `dataSourcesApi` / `domainApi` RTK Query
+  slices; a Data Sources list + connect form, the per-source onboarding flow (test /
+  introspect / suggest mappings / upload), a mapping-review table with confirm / edit /
+  reject / retire, and observability history; a Domain Map with per-entity counts,
+  provenance and `fresh` / `stale` / `lost` badges plus an entity-detail table. Built on the
+  existing design foundation (one new shared `Select` primitive); empty states stay honest.
 - Access token held **in memory only** (never in `localStorage`); backend errors surfaced as
   toasts from the unified error model.
 - OpenAPI type-generation workflow (`npm run gen:api`).
 
 ### What is *not* implemented yet (planned)
 
-Everything past the foundation, including: data-source connectors and the L0 domain map;
-the observation loop, risk detection and AI explanations (L2); recommendations and the
-`allow / ask / deny` enforcement gate (L3); L4 approval + execution adapters; L5 autopilot
-policies; verification and automatic demotion; audit-query endpoints; user-management
-endpoints; and **every business screen in the UI** (Risks/Recommendations, Approvals,
-Autopilot/Policies, Capabilities, Data Sources, Executions/Orders, Audit, Users & Roles) —
-these are **placeholder pages**, and the Dashboard is a data-less shell, until their phase
-lands.
+Everything past US1, including: the observation loop, risk detection and AI explanations
+(L2); recommendations and the `allow / ask / deny` enforcement gate (L3); L4 approval +
+execution adapters; L5 autopilot policies; verification and automatic demotion; audit-query
+endpoints; user-management endpoints; and the business screens after Data Sources / Domain
+Map (Risks/Recommendations, Approvals, Autopilot/Policies, Capabilities, Executions/Orders,
+Audit, Users & Roles) — these remain **placeholder pages**, and the Dashboard is a data-less
+shell, until their phase lands. US1's sync writes the canonical domain only; it does **not**
+yet diff rows into `observation_signal` or run any analysis.
 
 ## Running locally
 
@@ -192,7 +209,7 @@ Demo login (local development only): `admin@example.com` / `buyer@example.com` /
 | [`specs/001-smart-procurement/research.md`](specs/001-smart-procurement/research.md) | Technical decisions and rationale |
 | [`specs/001-smart-procurement/data-model.md`](specs/001-smart-procurement/data-model.md) | Data model and state machines |
 | [`specs/001-smart-procurement/contracts/`](specs/001-smart-procurement/contracts/) | Contracts: REST API, AI output, execution adapter, source connector, LORM enforcement |
-| [`specs/001-smart-procurement/tasks.md`](specs/001-smart-procurement/tasks.md) | 167 dependency-ordered implementation tasks (Phases 1–2 complete) |
+| [`specs/001-smart-procurement/tasks.md`](specs/001-smart-procurement/tasks.md) | 167 dependency-ordered implementation tasks (Phases 1–2 + Phase 3/US1 complete) |
 | [`specs/001-smart-procurement/quickstart.md`](specs/001-smart-procurement/quickstart.md) | End-to-end validation walkthrough (targets the full v1) |
 | [`docs/development-setup.md`](docs/development-setup.md) | Local setup: three repos, branching, ports, commands |
 | [`CLAUDE.md`](CLAUDE.md) | Orientation guide for working in this repository |
@@ -208,7 +225,7 @@ Governance artifacts are produced through Spec Kit from this repo root:
 /speckit-plan           → plan + contracts            (done)
 /speckit-tasks          → tasks.md                    (done)
 /speckit-analyze        → cross-artifact consistency  (done — clean)
-/speckit-implement      → implementation from tasks.md  (Phases 1–2 complete; Phase 3 next)
+/speckit-implement      → implementation from tasks.md  (Phases 1–2 + Phase 3/US1 complete; US2 next)
 ```
 
 Branching (all three repos): `feature/<slug>` for a phase, `fix/<slug>` for fixes, `main` as

@@ -17,12 +17,16 @@ sit inside this directory and are meant to be git-ignored by the root:
 | `./backend/` | `SmartProcurement-Backend` | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2.0 async, Alembic, PostgreSQL 16 |
 | `./frontend/` | `SmartProcurement-Frontend` | React 18, TypeScript, Vite, Redux Toolkit + RTK Query, Tailwind |
 
-`backend/` and `frontend/` are working apps — **Phase 1 (Setup) and Phase 2 (Foundational)
-are complete; Phase 3 has not started** (see `specs/001-smart-procurement/tasks.md` and the
-root `README.md` for the implemented-vs-planned breakdown). The Phase 2 frontend shell also
-has a completed **UI/design foundation** (design tokens, in-repo UI primitives, redesigned
-login + authenticated shell, responsive navigation, dashboard shell) — visual only, no
-business functionality. They are **not** tracked from the root repo — no submodules; the root
+`backend/` and `frontend/` are working apps — **Phases 1–2 (Setup, Foundational) and
+Phase 3 / User Story 1 (Data Sources & L0 domain map, T039–T059) are complete; US2
+(observation & risk detection) has not started** (see `specs/001-smart-procurement/tasks.md`
+and the root `README.md` for the implemented-vs-planned breakdown). US1 adds the
+`integration/` and `domain/` modules, `file`/`rest`/`sql` source connectors, AI-suggested +
+human-confirmed field mappings, a `sync_source` data path (canonical rows only — **no**
+`observation_signal` diffing or analysis yet), and the Data Sources + Domain Map screens.
+The Phase 2 frontend shell also has a completed **UI/design foundation** (design tokens,
+in-repo UI primitives, redesigned login + authenticated shell, responsive navigation,
+dashboard shell) — the shell itself is visual only. They are **not** tracked from the root repo — no submodules; the root
 `.gitignore` excludes `backend/`, `frontend/`, and `.idea/`. Frontend and backend communicate
 only through the REST/OpenAPI contract in
 `specs/001-smart-procurement/contracts/rest-api.md`.
@@ -44,7 +48,7 @@ commands, in dependency order:
 /speckit-plan           → plan.md + research.md + data-model.md + contracts/ + quickstart.md (done)
 /speckit-tasks          → tasks.md                           (done: 167 tasks, 12 phases)
 /speckit-analyze        → cross-artifact consistency check (spec ↔ plan ↔ tasks)  (done — clean)
-/speckit-implement      → executes tasks.md   (Phases 1–2 complete; Phase 3 next)
+/speckit-implement      → executes tasks.md   (Phases 1–2 + Phase 3/US1 complete; US2 next)
 ```
 
 The active feature directory is stored in `.specify/feature.json` (git-ignored, per-checkout
