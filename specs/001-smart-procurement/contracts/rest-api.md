@@ -48,6 +48,7 @@ Notation: `M` mutations require the named permission; responses reference `data-
 | GET | `/data-sources/{id}/mappings` | list `field_mapping` |
 | POST | `/mappings` | create mapping (`status=suggested`) |
 | POST | `/mappings/{id}/confirm` \| `/reject` \| `/retire` | lifecycle (writes `mapping_change_event`) |
+| POST | `/mappings/bulk-confirm` | confirm many at once — body `{data_source_id, mapping_ids[]}`; only source-owned `suggested` rows; returns `{requested, confirmed, failed[]}` (partial-failure safe) |
 | PATCH | `/mappings/{id}` | edit a confirmed mapping (logs change) |
 | GET | `/data-sources/{id}/health-history` | observability history |
 
