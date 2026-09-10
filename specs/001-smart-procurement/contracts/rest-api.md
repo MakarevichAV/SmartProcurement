@@ -54,7 +54,7 @@ Notation: `M` mutations require the named permission; responses reference `data-
 
 ### L0 Domain Map  (`domain.read`)
 | GET | `/domain/map` | entity/relationship summary with per-entity `source_provenance`, `observability` |
-| GET | `/domain/{entity}` | paged rows for `item`/`supplier`/`stock-level`/… with provenance |
+| GET | `/domain/{entity}` | paged rows for `item`/`supplier`/`stock-level`/… — each row keeps raw `source_provenance` plus `references` (FK columns resolved to `{label, id, …}`) and `provenance` (`{data_source_id, data_source_name, source_fields[], fetched_at}`) |
 
 ### Dashboard  (`domain.read`)
 | GET | `/dashboard` | open risks, pending approvals count, active policies, capability levels, source health, AI-unavailable items, recent executions |
