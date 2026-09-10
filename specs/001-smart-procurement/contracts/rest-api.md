@@ -57,7 +57,7 @@ Notation: `M` mutations require the named permission; responses reference `data-
 | GET | `/domain/{entity}` | paged rows for `item`/`supplier`/`stock-level`/… — each row keeps raw `source_provenance` plus `references` (FK columns resolved to `{label, id, …}`) and `provenance` (`{data_source_id, data_source_name, source_fields[], fetched_at}`) |
 
 ### Dashboard  (`domain.read`)
-| GET | `/dashboard` | open risks, pending approvals count, active policies, capability levels, source health, AI-unavailable items, recent executions |
+| GET | `/dashboard` | `lorm` (`open_risks`/`recommendations`/`approvals` — `null` until US2/US3/US4; `autopilot` = count of L5 capabilities, → "L5 + active policy" in US5) + `data_health` (source counts by health, `last_successful_sync`, canonical-row `fresh`/`stale`/`lost`, `open_observability_gaps`). US2 adds AI-unavailable items and recent executions. |
 
 ### Risks / Recommendations  (`domain.read`; `recommendation.request`)
 | GET | `/risks` | list `risk_finding` (filter by status/type/item) |
