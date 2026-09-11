@@ -23,10 +23,14 @@ Phase 3 / User Story 1 (Data Sources & L0 domain map, T039–T059) are complete;
 and the root `README.md` for the implemented-vs-planned breakdown). US1 adds the
 `integration/` and `domain/` modules, `file`/`rest`/`sql` source connectors, AI-suggested +
 human-confirmed field mappings, a `sync_source` data path (canonical rows only — **no**
-`observation_signal` diffing or analysis yet), and the Data Sources + Domain Map screens.
-The Phase 2 frontend shell also has a completed **UI/design foundation** (design tokens,
-in-repo UI primitives, redesigned login + authenticated shell, responsive navigation,
-dashboard shell) — the shell itself is visual only. They are **not** tracked from the root repo — no submodules; the root
+`observation_signal` diffing or analysis yet), and the Data Sources + Domain Map screens
+(business-readable, resolved-reference rows; bulk-confirm for suggested mappings) plus a
+data-backed Dashboard (`GET /dashboard`: LORM control-flow counters L2→L3→L4→L5 alongside a
+data-health section — the L2–L4 counters stay `null` until their subsystems land in
+US2–US4). The Phase 2 frontend shell also has a completed **UI/design foundation** (design
+tokens, in-repo UI primitives, redesigned login + authenticated shell with silent re-auth on
+401, responsive navigation). Everything past US1 remains an intentional placeholder. They are
+**not** tracked from the root repo — no submodules; the root
 `.gitignore` excludes `backend/`, `frontend/`, and `.idea/`. Frontend and backend communicate
 only through the REST/OpenAPI contract in
 `specs/001-smart-procurement/contracts/rest-api.md`.

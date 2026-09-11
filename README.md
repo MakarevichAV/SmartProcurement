@@ -118,7 +118,10 @@ phases):
   raise) on `audit_record` and `capability_level_event`.
 - **Durable job queue / worker foundation** — a `job` table drained with
   `FOR UPDATE SKIP LOCKED`, exponential backoff, recurring self-re-enqueue; a
-  `python -m app.worker` loop with a `--run-once` mode.
+  `python -m app.worker` loop with a `--run-once` mode, dispatching to a shared handler
+  registry (`app/jobs/registry.py`, imported exactly once so `__main__` and re-imports of
+  `app.worker` see the same `HANDLERS`) that now correctly runs the US1 `suggest_mapping` /
+  `observe_source` handlers end to end.
 - **AI provider abstraction** — `LLMProvider` protocol with an Anthropic implementation and a
   `DeterministicMockProvider`; a `generate_structured` wrapper that validates output against a
   schema and, on persistent failure, opens an observability gap + writes an `ai_unavailable`
@@ -131,10 +134,18 @@ phases):
   `/test`, `/introspect`, `/upload`, `/mapping-suggestions`, `/health-history`. AI proposes
   mappings (`MappingSuggestionSet`, unknown source fields dropped) but **nothing is applied
   until a human confirms** — `/mappings/{id}/confirm|reject|retire`, `PATCH /mappings/{id}`,
-  each logged. A `sync_source` service + `observe_source` job maps confirmed fields into the
-  domain (data path only — no signal diffing / risk analysis yet). `GET /domain/map` and
-  `GET /domain/{entity}` expose counts, per-entity provenance and observability.
-- Demo seed CLI + `tests/fixtures/demo_enterprise.csv`; 52 automated tests; ruff + black +
+  each logged, plus `POST /mappings/bulk-confirm` to confirm every eligible `suggested` row on
+  a source in one request (partial-failure safe — ineligible ids come back in `failed` rather
+  than failing the batch). A `sync_source` service + `observe_source` job maps confirmed
+  fields into the domain (data path only — no signal diffing / risk analysis yet).
+  `GET /domain/map` and `GET /domain/{entity}` expose counts, per-entity provenance and
+  observability, plus business-readable `references` (FK columns resolved to a label) on
+  every row.
+- **`GET /dashboard`** — a Phase-3 read model composing existing services (no new tables):
+  LORM control-flow counters (`open_risks`/`recommendations`/`approvals` = `null` until
+  US2/US3/US4, `autopilot` = real L5-capability count) and `data_health` (source health
+  counts, last successful sync, canonical-row freshness, open observability gaps).
+- Demo seed CLI + `tests/fixtures/demo_enterprise.csv`; 75 automated tests; ruff + black +
   `mypy --strict` clean; migrations round-trip with no drift.
 
 **Frontend**
@@ -147,15 +158,27 @@ phases):
   layer, a header with the signed-in user's name, role(s) and **Sign out**. **Responsive** —
   persistent sidebar from the `lg` breakpoint, overlay drawer below it (`Escape` / scrim /
   nav to close).
-- **Dashboard shell** — page header, stat tiles showing `—` placeholders, empty-state
-  panels; structure only, no data yet. Business screens past US1 remain intentional
-  "planned for a later phase" placeholders.
+- **Dashboard** — reads `GET /dashboard`: four stat tiles walk the LORM control flow
+  **L2 → L3 → L4 → L5** (Open risks / Recommendations / Approvals / Autopilot); the first
+  three render `—` with an "available when … is enabled" note until their subsystems land in
+  US2/US3/US4 (the backend sends `null`, never a fake `0`), while Autopilot shows the real
+  count of capabilities at L5. A **Data health** section shows connected-source counts by
+  health, latest successful sync, open observability gaps, and canonical-row freshness
+  (fresh/stale/lost). Business screens past US1 remain intentional "planned for a later phase"
+  placeholders.
 - **Data Sources & Domain Map screens (US1)** — `dataSourcesApi` / `domainApi` RTK Query
   slices; a Data Sources list + connect form, the per-source onboarding flow (test /
   introspect / suggest mappings / upload), a mapping-review table with confirm / edit /
-  reject / retire, and observability history; a Domain Map with per-entity counts,
-  provenance and `fresh` / `stale` / `lost` badges plus an entity-detail table. Built on the
-  existing design foundation (one new shared `Select` primitive); empty states stay honest.
+  reject / retire / **bulk-confirm all suggested mappings in one request**, and observability
+  history; a **business-readable** Domain Map with per-entity counts, provenance and
+  `fresh` / `stale` / `lost` badges plus an entity-detail table that resolves foreign keys to
+  a label (e.g. an `item_id` column shows "SKU-123 — Steel Bracket") and names the originating
+  source. Built on the existing design foundation (one new shared `Select` primitive); empty
+  states stay honest.
+- **Silent re-auth on 401** — the shared RTK Query base query renews the short-lived access
+  token on any 401 from a non-auth route (one deduplicated `POST /auth/refresh`, then retries
+  the original request once) in addition to the existing renew-on-load, so a lapsed in-memory
+  token no longer surfaces as a spurious "missing bearer token" failure on the next mutation.
 - Access token held **in memory only** (never in `localStorage`); backend errors surfaced as
   toasts from the unified error model.
 - OpenAPI type-generation workflow (`npm run gen:api`).
@@ -167,9 +190,11 @@ Everything past US1, including: the observation loop, risk detection and AI expl
 execution adapters; L5 autopilot policies; verification and automatic demotion; audit-query
 endpoints; user-management endpoints; and the business screens after Data Sources / Domain
 Map (Risks/Recommendations, Approvals, Autopilot/Policies, Capabilities, Executions/Orders,
-Audit, Users & Roles) — these remain **placeholder pages**, and the Dashboard is a data-less
-shell, until their phase lands. US1's sync writes the canonical domain only; it does **not**
-yet diff rows into `observation_signal` or run any analysis.
+Audit, Users & Roles) — these remain **placeholder pages** until their phase lands. The
+Dashboard's `open_risks` / `recommendations` / `approvals` counters stay `null` until US2/US3/
+US4 land, and its `autopilot` count is a Phase-3 approximation (L5 capabilities, not yet
+gated on a matching active policy — that's US5). US1's sync writes the canonical domain only;
+it does **not** yet diff rows into `observation_signal` or run any analysis.
 
 ## Running locally
 
