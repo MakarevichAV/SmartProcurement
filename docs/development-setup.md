@@ -26,13 +26,17 @@ review together. Branch off `main`; merge back to `main` when the slice is done.
 
 ## Status
 
-Phase 1 (Setup) and Phase 2 (Foundational) are complete, including a UI/design foundation for
-the Phase 2 shell; Phase 3 has not started. The stack below is fully runnable: FastAPI +
-PostgreSQL, auth/refresh/RBAC, the capability registry and one-level promotion, append-only
-audit, the job-queue worker, and the React app — a redesigned login, the responsive
-authenticated navigation shell (design tokens + in-repo UI primitives) and a dashboard shell;
-other business screens are placeholders. See the root `README.md` for the
-implemented-vs-planned breakdown.
+Phase 1 (Setup), Phase 2 (Foundational) and Phase 3 / User Story 1 (data sources & the L0
+domain map, T039–T059) are complete; Phase 4 / User Story 2 (observation & risk detection) has
+not started. The stack below is fully runnable: FastAPI + PostgreSQL, auth/refresh/RBAC (the
+frontend silently re-authenticates via `POST /auth/refresh` on a `401`, not just on load),
+the capability registry and one-level promotion, append-only audit, the job-queue worker
+(handlers registered through the shared `app/jobs/registry.py`, including US1's
+`suggest_mapping` / `observe_source`), and the React app — a redesigned login, the responsive
+authenticated navigation shell (design tokens + in-repo UI primitives), the Data Sources and
+Domain Map screens, and a Dashboard reading the live `GET /dashboard` read model; other
+business screens are placeholders. See the root `README.md` for the implemented-vs-planned
+breakdown.
 
 ## Prerequisites
 

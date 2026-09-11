@@ -153,6 +153,12 @@ confirm mappings, see the Domain Map populated; nothing is applied without confi
 
 **Checkpoint**: US1 fully functional and testable on its own (MVP).
 
+**Note**: `GET /api/v1/dashboard` was added as Phase 3 polish. It exposes only the Phase-3-safe
+read model — LORM `open_risks`/`recommendations`/`approvals` as `null` placeholders and a real
+`autopilot` (L5-capability) count, alongside data-source/domain-map health. The full dashboard
+aggregation service (`risk_finding`/`recommendation`/`procurement_action` counts) is T072/T073
+below and remains part of later user stories — it is **not** considered done.
+
 ---
 
 ## Phase 4: User Story 2 — Observation & risk detection with explanation (Priority: P1)
